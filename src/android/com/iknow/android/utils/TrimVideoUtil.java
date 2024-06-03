@@ -1,5 +1,6 @@
 package com.iknow.android.utils;
 
+import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
@@ -8,9 +9,6 @@ import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.text.TextUtils;
-import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler;
-import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
-import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunningException;
 import com.iknow.android.interfaces.TrimVideoImgListener;
 import com.iknow.android.interfaces.TrimVideoListener;
 import com.iknow.android.models.VideoInfo;
@@ -22,6 +20,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import com.arthenica.ffmpegkit.FFmpegKit;
+import com.arthenica.ffmpegkit.ReturnCode;
+
 
 public class TrimVideoUtil {
 
@@ -45,6 +46,7 @@ public class TrimVideoUtil {
       TrimVideoUtil.VIDEO_FRAMES_WIDTH = SCREEN_WIDTH_FULL - RECYCLER_VIEW_PADDING * 2;
       TrimVideoUtil.THUMB_WIDTH = (SCREEN_WIDTH_FULL - RECYCLER_VIEW_PADDING * 2) / VIDEO_MAX_TIME;
   }
+
   public static void trim(Context context, String inputFile, String outputFile, long startMs, long endMs, final TrimVideoListener callback) {
     final String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
     final String outputName = "trimmedVideo_" + timeStamp + ".mp4";
@@ -63,48 +65,38 @@ public class TrimVideoUtil {
      OUTPUT，输出视频文件
      */
     String cmd = "-ss " + start + " -t " + duration + " -i " + inputFile + " -vcodec copy -acodec copy " + outputFile;
-    String[] command = cmd.split(" ");
-    try {
-      final String tempOutFile = outputFile;
-      FFmpeg.getInstance(context).execute(command, new ExecuteBinaryResponseHandler() {
 
-        @Override public void onSuccess(String s) {
-          callback.onFinishTrim(tempOutFile);
-        }
+    final String tempOutFile = outputFile;
 
-        @Override public void onStart() {
-          callback.onStartTrim();
-        }
-      });
-    } catch (FFmpegCommandAlreadyRunningException e) {
-      e.printStackTrace();
-    }
+    callback.onStartTrim();
+    FFmpegKit.executeAsync(cmd, session -> {
+              ReturnCode returnCode = session.getReturnCode();
+                if (ReturnCode.isSuccess(returnCode)) {
+                  callback.onFinishTrim(tempOutFile);
+                } else {
+                  callback.onCancel();
+                }
+    });
 
   }
+
+
   public static void trimImg(Context context, String inputFile, String outputFile,  final TrimVideoImgListener callback) {
     /**
      * 截图命令 ffmpeg.exe -i a.mp4  -y -f image2 -t 0.001 a_pic.jpg
      */
     String cmd = "-i " + inputFile + " -y -f image2 -t 0.001 " + outputFile;
-    String[] command = cmd.split(" ");
-    try {
-      final String tempOutFile = outputFile;
-      FFmpeg.getInstance(context).execute(command, new ExecuteBinaryResponseHandler() {
 
-        @Override public void onSuccess(String s) {
-          callback.onFinishTrimImg(tempOutFile);
-        }
-
-        @Override public void onStart() {
-          callback.onStartTrimImg();
-        }
-        @Override public void onFailure(String message){
-          callback.onCancelTrimImg();
-        }
-      });
-    } catch (FFmpegCommandAlreadyRunningException e) {
-      e.printStackTrace();
-    }
+    final String tempOutFile = outputFile;
+    callback.onStartTrimImg();
+    FFmpegKit.executeAsync(cmd, session -> {
+      ReturnCode returnCode = session.getReturnCode();
+      if (ReturnCode.isSuccess(returnCode)) {
+        callback.onFinishTrimImg(tempOutFile);
+      } else {
+        callback.onCancelTrimImg();
+      }
+    });
 
   }
 
@@ -136,6 +128,7 @@ public class TrimVideoUtil {
     });
   }
 
+  @SuppressLint("Range")
   public static void loadVideoFiles(final Context mContext, final SimpleCallback simpleCallback) {
 
 
@@ -207,4 +200,5 @@ public class TrimVideoUtil {
     }
     return retStr;
   }
+
 }
