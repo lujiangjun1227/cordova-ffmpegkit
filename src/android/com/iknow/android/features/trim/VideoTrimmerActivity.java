@@ -7,12 +7,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 
+import com.arthenica.ffmpegkit.FFmpegKit;
+import com.arthenica.ffmpegkit.ReturnCode;
 import com.iknow.android.MResource;
 import com.iknow.android.TrimmerCordovaPlugin;
-import com.iknow.android.ZApplication;
-import com.iknow.android.interfaces.CompressVideoListener;
 import com.iknow.android.interfaces.TrimVideoListener;
-import com.iknow.android.utils.CompressVideoUtil;
 import com.iknow.android.widget.VideoTrimmerView;
 
 public class VideoTrimmerActivity extends Activity implements TrimVideoListener {
@@ -75,18 +74,20 @@ public class VideoTrimmerActivity extends Activity implements TrimVideoListener 
         //TODO: please handle your trimmed video url here!!!
         String out = saveVideoPath; //.replace("file:///", "").replace("file://", "");
         buildDialog(getResources().getString(MResource.getIdByName(this, "string", "compressing"))).show();
-        CompressVideoUtil.compress(this, in, out, new CompressVideoListener() {
-            @Override
-            public void onSuccess(String message) {
-            }
 
-            @Override
-            public void onFailure(String message) {
-                TrimmerCordovaPlugin.cdvCallbackContetxt.error(message);
-            }
+        String cmd = "-threads 2 -y -i " + in + " -strict -2 -vcodec libx264 -preset ultrafast -crf 28 -acodec copy -ac 2 " + out;
+        //String cmd = "-threads 2 -y -i " + inputFile + " -strict -2 -vcodec libx264 -vf scale=720:-1 -crf 28 -acodec copy -ac 2 " + outputFile;
 
-            @Override
-            public void onFinish() {
+        FFmpegKit.executeAsync(cmd, session -> {
+            ReturnCode returnCode = session.getReturnCode();
+            if (ReturnCode.isSuccess(returnCode)) {
+                if (mProgressDialog.isShowing()) {
+                    mProgressDialog.dismiss();
+                }
+                TrimmerCordovaPlugin.cdvCallbackContetxt.success(saveVideoPath);
+                finish();
+            } else {
+                TrimmerCordovaPlugin.cdvCallbackContetxt.error("Compress video failed!");
                 if (mProgressDialog.isShowing()) {
                     mProgressDialog.dismiss();
                 }
