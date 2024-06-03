@@ -43,7 +43,6 @@
         <source-file src="src/android/com/iknow/android/interfaces/TrimVideoImgListener.java" target-dir="src/com/iknow/android/interfaces" />
 
         <source-file src="src/android/com/iknow/android/models/VideoInfo.java" target-dir="src/com/iknow/android/models" />
-        <source-file src="src/android/com/iknow/android/utils/CompressVideoUtil.java" target-dir="src/com/iknow/android/utils" />
         <source-file src="src/android/com/iknow/android/utils/TrimVideoUtil.java" target-dir="src/com/iknow/android/utils" />
         <source-file src="src/android/com/iknow/android/widget/RangeSeekBarView.java" target-dir="src/com/iknow/android/widget" />
         <source-file src="src/android/com/iknow/android/widget/SpacesItemDecoration.java" target-dir="src/com/iknow/android/widget" />
