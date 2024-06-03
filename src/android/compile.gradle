@@ -9,7 +9,7 @@ dependencies {
     implementation files('libs/universal-image-loader-1.9.5.jar')
     implementation(name: "recyclerview-1.2.0", ext: "aar")
     implementation(name: "android-utils-sdk-1.1.2", ext: "aar")
-    implementation(name: "ffmpeg-kit-full-6.0.LTS", ext: "aar")
+    implementation "com.arthenica:ffmpeg-kit-full:6.0.LTS"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.21"
 }
 
