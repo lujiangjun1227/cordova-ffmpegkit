@@ -1,10 +1,9 @@
 package com.iknow.android;
 
 import android.content.Context;
-
-import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
-import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler;
-import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException;
+import android.util.Log;
+import com.arthenica.ffmpegkit.FFmpegKit;
+import com.arthenica.ffmpegkit.ReturnCode;
 import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
 import com.nostra13.universalimageloader.cache.memory.impl.LRULimitedMemoryCache;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -22,7 +21,7 @@ public class ZApplication {
         if (isInit == false) {
             BaseUtils.init(context);
             initImageLoader(context);
-            initFFmpegBinary(context);
+            initFFmpegBinary();
         }
         isInit = true;
 
@@ -30,29 +29,22 @@ public class ZApplication {
 
     public static void initImageLoader(Context context) {
         int memoryCacheSize = (int) (Runtime.getRuntime().maxMemory() / 10);
-        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(context).memoryCache(new LRULimitedMemoryCache(memoryCacheSize))
+        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(context)
+                .memoryCache(new LRULimitedMemoryCache(memoryCacheSize))
                 .diskCacheFileNameGenerator(new Md5FileNameGenerator())
                 .tasksProcessingOrder(QueueProcessingType.LIFO)
                 .build();
-        // Initialize ImageLoader with configuration.
         ImageLoader.getInstance().init(config);
     }
 
-    private static void initFFmpegBinary(Context context) {
-
-        try {
-            FFmpeg.getInstance(context).loadBinary(new LoadBinaryResponseHandler() {
-                @Override
-                public void onFailure() {
-                }
-
-                @Override
-                public void onSuccess() {
-
-                }
-            });
-        } catch (FFmpegNotSupportedException e) {
-            e.printStackTrace();
-        }
+    private static void initFFmpegBinary() {
+        FFmpegKit.executeAsync("-version", session -> {
+            ReturnCode returnCode = session.getReturnCode();
+            if (ReturnCode.isSuccess(returnCode)) {
+                Log.d("FFmpegLoader", "FFmpegKit initialized successfully.");
+            } else {
+                Log.d("FFmpegLoader", "Failed to initialize FFmpegKit.");
+            }
+        });
     }
 }
